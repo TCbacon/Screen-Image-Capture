@@ -15,5 +15,8 @@
 <li> Change temp_env.py to env.py and configure file env variables to your liking</li>
 </ul>
 
-## Run
+## Run Script
 python screenshot.py
+
+## Run UI
+python ui_screenshot.py

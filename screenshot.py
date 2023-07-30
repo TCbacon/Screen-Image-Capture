@@ -59,6 +59,8 @@ class Screenshot():
                 self.exit_program()
             else:
                 print(f"You pressed '{pressed_key}'. Press '{SCREENSHOT_KEY}' key to take a screenshot")
+                winsound.PlaySound('SystemQuestion', winsound.SND_ASYNC)
+
         except AttributeError:
             # Ignore special keys like Shift, Alt, etc.
             pass

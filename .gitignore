@@ -1,1 +1,5 @@
 /venv
+/exe
+/__pycache__
+Py_Screenshot.spec
+screenshot_path_save.txt
