@@ -11,6 +11,8 @@
 ## Setup
 
 <ul>
+<li>python -m venv venv</li>
+<li>./venv/Scripts/activate</li>
 <li> pip install -r requirements.txt </li>
 <li>Change <b>temp_env.py</b> to <b>env.py</b> and configure file env variables to your liking. This is only used for <b>screenshot.py</b>.</li>
 </ul>
@@ -30,10 +32,10 @@ python ui_screenshot.py
 </ul>
 
 ### CMD executable
-pyinstaller --name Py_Screenhot --onefile ../screenshot.py
+`pyinstaller --name Py_Screenshot --onefile ../screenshot.py`
 
 ### UI executable
-pyinstaller --name Py_Screenshot --onefile --noconsole ../ui_screenshot.py
+`pyinstaller --name Py_Screenshot --onefile --noconsole ../ui_screenshot.py`
 
 ## UI executable save data location
 `screenshot_path_save.json`
