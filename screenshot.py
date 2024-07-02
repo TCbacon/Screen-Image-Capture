@@ -25,18 +25,27 @@ class Screenshot():
         print("Exiting program...")
         self.listener.stop()
         self.is_program_running = False
-
-    def take_screenshot_and_save(self, pressed_key):
-        
+    
+    def is_create_directory_success(self):
         try:
             # Ensure the directory exists, create it if it doesn't
             os.makedirs(name=SAVE_DIRECTORY, exist_ok=True)
+            return True
         except OSError as e:
             print(f"Error creating directory: {e}")
-            return
-        
+            return False
+
+    def take_screenshot_and_save(self, pressed_key):
+
         try:
             pressed_key = pressed_key.char
+
+            if pressed_key == 'q' or pressed_key == 'Q':
+                self.exit_program()
+                return
+            
+            if not self.is_create_directory_success():
+                return
             
             if SCREENSHOT_KEY == pressed_key:
                 print(f"Key '{pressed_key}' has been pressed")
@@ -55,8 +64,6 @@ class Screenshot():
                 screenshot.save(screenshot_path)
 
                 print(f"Screenshot saved as {screenshot_path}")
-            elif pressed_key == 'q' or pressed_key == 'Q':
-                self.exit_program()
             else:
                 print(f"You pressed '{pressed_key}'. Press '{SCREENSHOT_KEY}' key to take a screenshot")
                 winsound.PlaySound('SystemQuestion', winsound.SND_ASYNC)

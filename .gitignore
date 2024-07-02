@@ -1,5 +1,7 @@
 /venv
-/exe
+/exe*
 /__pycache__
 Py_Screenshot.spec
 screenshot_path_save.txt
+screenshot_path_save.json
+temp_env.py

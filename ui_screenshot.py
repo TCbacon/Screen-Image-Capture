@@ -3,8 +3,10 @@ from pynput import keyboard
 from PIL import ImageGrab
 import time
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog
 import winsound
+import json
 
 class ScreenShot(object):
 
@@ -29,6 +31,16 @@ class ScreenShot(object):
         self.browse_button = tk.Button(root, text="Browse", command=self.browse_directory)
         self.browse_button.pack()
 
+        # List to store the recent folders
+        self.recent_folders = []
+
+        self.folder_dropdown = ttk.Combobox(root, values=self.recent_folders, state='readonly', width=400)
+        self.folder_dropdown.bind('<<ComboboxSelected>>', self.on_dropdown_selected)
+        self.folder_dropdown.pack(pady=5, padx=10)
+
+        # Binding the folder_entry to the on_folder_selected function
+        self.directory_entry.bind("<FocusOut>", self.on_folder_selected)
+
         self.filename_label = tk.Label(root, text="Base Filename")
         self.filename_label.pack()
         self.filename_entry = tk.Entry(root, width=40, textvariable=self.filename_stringvar)
@@ -51,10 +63,87 @@ class ScreenShot(object):
         self.more_options_visible = False
 
         #init data in entry boxes
-        self.read_save_data()
+        self.load_drop_down_list()
 
         self.listener = keyboard.Listener(on_press=lambda key:self.take_screenshot_and_save(pressed_key=key))
         self.listener.start()
+    
+
+    def load_drop_down_list(self):
+        try:
+            with open("screenshot_path_save.json", 'r') as file:
+                data = json.load(file)
+
+                selected_dir = data.get('directory', '')
+                filename = data.get('filename', '')
+                settings = data.get('settings', {})
+
+                if len(selected_dir) > 0:
+                    self.directory_entry.delete(0, tk.END)
+                    self.directory_entry.insert(0, selected_dir.rstrip('\n'))
+
+                if len(filename) > 0:
+                    self.filename_entry.delete(0, tk.END)
+                    self.filename_entry.insert(0, filename.rstrip('\n'))  
+            
+                if settings:
+                    self.screenshot_key_stringvar = tk.StringVar(value=settings['screenshot_key'])
+                    self.extension_stringvar = tk.StringVar(value=settings['extension'])
+                    self.frequency_stringvar = tk.StringVar(value=settings['frequency'])
+                    self.duration_stringvar = tk.StringVar(value=settings['duration'])
+                
+                self.recent_folders = data['directories']
+                self.update_dropdown()
+    
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(e)
+
+    def save_data(self):
+        with open("screenshot_path_save.json", 'w') as file:
+            screenshot_key = self.screenshot_key_stringvar.get()
+            extension = self.extension_stringvar.get()
+            frequency = self.frequency_stringvar.get()
+            duration = self.duration_stringvar.get()
+
+            json.dump({'directory': self.directory_stringvar.get(),
+                       'settings': {'screenshot_key': screenshot_key, 
+                                    'extension': extension, 
+                                    'frequency': frequency,
+                                    'duration': duration
+                                    },
+                       'directories': self.recent_folders, 
+                       'filename': self.filename_stringvar.get()}, 
+                       file, 
+                       indent=4
+                    )
+
+    
+    def remove_duplicates_and_reorder(self, directory_path):
+        # Remove the selected folder if it already exists in the recent_folders list
+        if directory_path in self.recent_folders:
+            self.recent_folders.remove(directory_path)
+
+        if not directory_path:
+            return
+
+        # Insert the folder at the beginning of the list
+        self.recent_folders.insert(0, directory_path)
+
+    
+    def on_folder_selected(self, event):
+        directory_path = self.directory_stringvar.get()
+        self.remove_duplicates_and_reorder(directory_path)
+        self.update_dropdown()
+        self.save_data()
+
+    def update_dropdown(self):
+        self.folder_dropdown['values'] = self.recent_folders
+        
+    def on_dropdown_selected(self, event):
+        selected_folder = self.folder_dropdown.get()
+        self.directory_stringvar.set(selected_folder)
     
     def toggle_more_options(self):
         if not self.more_options_visible:
@@ -81,31 +170,6 @@ class ScreenShot(object):
         # Destroy the additional entry fields here
         for widget in self.more_options_frame.winfo_children():
             widget.destroy()
-    
-    def read_save_data(self):
-        try:
-            with open('screenshot_path_save.txt','r') as save_file:
-                entry_list = save_file.readlines()
-                length_list = len(entry_list)
-                
-                for i in range(length_list):
-                    if i == 0:
-                        #clear entry before inserting new data
-                        self.directory_entry.delete(0, tk.END)
-                        self.directory_entry.insert(0, entry_list[i].rstrip('\n'))
-                    elif i == 1:
-                        #clear entry before inserting new data
-                        self.filename_entry.delete(0, tk.END)
-                        self.filename_entry.insert(0, entry_list[i].rstrip('\n'))           
-                    else:
-                        break
-        except FileNotFoundError:
-            pass
-    
-    def save_data(self):
-        with open('screenshot_path_save.txt','w') as save_file:
-            save_file.write(self.directory_stringvar.get() + "\n")
-            save_file.write(self.filename_stringvar.get() + "\n")
 
     def take_screenshot_and_save(self, pressed_key):
 
@@ -156,6 +220,9 @@ class ScreenShot(object):
         self.directory = filedialog.askdirectory()
         self.directory_entry.delete(0, tk.END)
         self.directory_entry.insert(0, self.directory)
+        self.remove_duplicates_and_reorder(self.directory)
+        self.update_dropdown()
+        
 
 
 # Create the main window
